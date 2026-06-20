@@ -483,7 +483,7 @@ a:active,
 /* =Canvas
 ---------------------------------------------- */
 body {
-	background: #666666 fixed;
+	background: #666666 url("/web/20161025005338im_/http://www.diasextranos.com/wp-content/themes/f2/images/noise.png") fixed;
 }
 
 #page {
@@ -1742,60 +1742,23 @@ body {
 	color: #c6c8c9;
 }
 
-/* =Adaptaciones del sitio estático Días Extraños (sobre el tema F2)
------------------------------------------------------------------- */
+/*
+     FILE ARCHIVED ON 00:53:38 Oct 25, 2016 AND RETRIEVED FROM THE
+     INTERNET ARCHIVE ON 07:46:45 Jun 20, 2026.
+     JAVASCRIPT APPENDED BY WAYBACK MACHINE, COPYRIGHT INTERNET ARCHIVE.
 
-/* Skip link accesible */
-.skip-link { position: absolute; left: -9999px; top: auto; }
-.skip-link:focus { left: 1rem; top: 1rem; z-index: 100; background:#fff; padding:0.5rem 1rem; border-radius:0.3rem; }
-
-/* Menú principal: comportamiento responsive sin el JS de WordPress */
-.site-header .site-navigation.main-navigation .menu-toggle { display: none; }
-.site-header .site-navigation.main-navigation .menu { display: block; }
-.site-header .site-navigation.main-navigation ul { padding: 0 1rem 1rem; }
-@media screen and (max-width: 48em) {
-	.site-header .site-navigation.main-navigation .menu-toggle { display: inline-block; }
-	.site-header .site-navigation.main-navigation .menu { display: none; }
-	.site-header .site-navigation.main-navigation.toggled .menu { display: block; }
-	.site-header .site-navigation.main-navigation ul { text-align: center; }
-	.site-header .site-navigation.main-navigation li { float: none; display: block; margin: 0.2rem 0; }
-}
-
-/* Resúmenes de entradas (home / categoría) */
-.hentry .entry-summary { margin: 1em 0 0; }
-.featured-image { text-align: center; line-height: 0; margin: 0 0 1rem; }
-.featured-image img, .entry-summary img { max-width: 100%; height: auto; border-radius: 0.5rem;
-	box-shadow: rgba(0,0,0,0.2) 0 0 0.3rem 0.1rem; }
-.more-link { display: inline-block; font-weight: bold; }
-.entry-summary .entry-meta { margin-bottom: 0.5em; }
-
-/* Captions del contenido convertidas a <figure> por el generador */
-figure.figure { margin: 0 0 1.5em; text-align: center; }
-figure.figure img { max-width: 100%; height: auto; border-radius: 0.5rem;
-	box-shadow: rgba(0,0,0,0.2) 0 0 0.3rem 0.1rem; }
-figcaption.figcaption { font-size: 1.2rem; color: #888; margin-top: 0.4rem; }
-
-/* Embeds responsivos (vídeos / iframes) */
-.embed { position: relative; padding-bottom: 56.25%; height: 0; margin: 0 0 1.5em; overflow: hidden;
-	border-radius: 0.5rem; box-shadow: rgba(0,0,0,0.2) 0 0 0.2rem 0.1rem; }
-.embed iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
-
-/* Widget de búsqueda (filtro en cliente) */
-.widget_search .search-form { display: block; }
-.widget_search input[type=search] { width: 100%; box-sizing: border-box; padding: 5px; }
-.search-feedback { font-size: 1.2rem; color: #888; margin: 0 0 1em; }
-.no-results { font-style: italic; color: #888; }
-
-/* Página: cabecera de archivo / listado por año */
-.year-block { margin: 0 0 1.5em; }
-.year-block .year { border-bottom: 1px solid #e4e4e4; padding-bottom: 0.3rem; margin: 0 0 0.8rem; }
-.arch-list { list-style: none; margin: 0; padding: 0; }
-.arch-list li { margin: 0 0 0.4rem; }
-.arch-list li:before { content: ""; }
-.arch-list time { color: #888; font-size: 1.2rem; display: inline-block; width: 4.5rem; }
-
-/* Botón / volver */
-.post-foot-nav { margin: 1.5em 0 0; }
-.btn { display: inline-block; padding: 0.6em 1.2em; background: #27567a; color: #fff;
-	border-radius: 0.3rem; font-weight: bold; }
-.btn:hover { background: #417196; text-decoration: none; }
+     ALL OTHER CONTENT MAY ALSO BE PROTECTED BY COPYRIGHT (17 U.S.C.
+     SECTION 108(a)(3)).
+*/
+/*
+playback timings (ms):
+  captures_list: 0.569
+  exclusion.robots: 0.072
+  exclusion.robots.policy: 0.061
+  esindex: 0.009
+  cdx.remote: 20.706
+  LoadShardBlock: 91.999 (3)
+  PetaboxLoader3.datanode: 65.95 (4)
+  PetaboxLoader3.resolve: 50.602 (2)
+  load_resource: 74.008
+*/

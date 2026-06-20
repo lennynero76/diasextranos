@@ -1,0 +1,111 @@
+/* =Adaptaciones del sitio estático Días Extraños (sobre el tema F2 v2.2.3)
+   --------------------------------------------------------------------------
+   Este archivo se carga DESPUÉS de f2-original.css (el style.css real del
+   tema F2). Contiene solo lo imprescindible para que el tema funcione sin
+   PHP/WordPress y para replicar como HTML estático los plugins que cargaba
+   el blog en 2019 (AddToAny, YARPP, Social Links Sidebar).
+   -------------------------------------------------------------------------- */
+
+/* Textura de fondo del tema (noise.png) servida localmente */
+body { background: #666666 url("/assets/themes/f2/images/noise.png") fixed; }
+
+/* Skip link accesible */
+.skip-link { position: absolute; left: -9999px; top: auto; }
+.skip-link:focus { left: 1rem; top: 1rem; z-index: 100; background:#fff; padding:0.5rem 1rem; border-radius:0.3rem; }
+
+/* Menú principal: comportamiento responsive sin el JS de WordPress */
+.site-header .site-navigation.main-navigation .menu-toggle { display: none; }
+.site-header .site-navigation.main-navigation .menu { display: block; }
+.site-header .site-navigation.main-navigation ul { padding: 0 1rem 1rem; }
+@media screen and (max-width: 48em) {
+	.site-header .site-navigation.main-navigation .menu-toggle { display: inline-block; }
+	.site-header .site-navigation.main-navigation .menu { display: none; }
+	.site-header .site-navigation.main-navigation.toggled .menu { display: block; }
+	.site-header .site-navigation.main-navigation ul { text-align: center; }
+	.site-header .site-navigation.main-navigation li { float: none; display: block; margin: 0.2rem 0; }
+}
+
+/* Resúmenes de entradas (home / categoría) */
+.hentry .entry-summary { margin: 1em 0 0; }
+.featured-image { text-align: center; line-height: 0; margin: 0 0 1rem; }
+.featured-image img, .entry-summary img { max-width: 100%; height: auto; border-radius: 0.5rem;
+	box-shadow: rgba(0,0,0,0.2) 0 0 0.3rem 0.1rem; }
+.more-link { display: inline-block; font-weight: bold; }
+.entry-summary .entry-meta { margin-bottom: 0.5em; }
+
+/* Captions del contenido convertidas a <figure> por el generador */
+figure.figure { margin: 0 0 1.5em; text-align: center; }
+figure.figure img { max-width: 100%; height: auto; border-radius: 0.5rem;
+	box-shadow: rgba(0,0,0,0.2) 0 0 0.3rem 0.1rem; }
+figcaption.figcaption { font-size: 1.2rem; color: #888; margin-top: 0.4rem; }
+
+/* Embeds responsivos (vídeos / iframes) 16:9 */
+.embed { position: relative; padding-bottom: 56.25%; height: 0; margin: 0 0 1.5em; overflow: hidden;
+	border-radius: 0.5rem; box-shadow: rgba(0,0,0,0.2) 0 0 0.2rem 0.1rem; }
+.embed iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+
+/* Widget de búsqueda (filtro en cliente) */
+.widget_search .search-form { display: block; }
+.widget_search input[type=search] { width: 100%; box-sizing: border-box; padding: 5px; }
+.search-feedback { font-size: 1.2rem; color: #888; margin: 0 0 1em; }
+.no-results { font-style: italic; color: #888; }
+
+/* Página: cabecera de archivo / listado por año */
+.year-block { margin: 0 0 1.5em; }
+.year-block .year { border-bottom: 1px solid #e4e4e4; padding-bottom: 0.3rem; margin: 0 0 0.8rem; }
+.arch-list { list-style: none; margin: 0; padding: 0; }
+.arch-list li { margin: 0 0 0.4rem; }
+.arch-list li:before { content: ""; }
+.arch-list time { color: #888; font-size: 1.2rem; display: inline-block; width: 4.5rem; }
+
+/* Botón / volver */
+.post-foot-nav { margin: 1.5em 0 0; }
+.btn { display: inline-block; padding: 0.6em 1.2em; background: #27567a; color: #fff;
+	border-radius: 0.3rem; font-weight: bold; }
+.btn:hover { background: #417196; text-decoration: none; }
+
+/* ==========================================================================
+   Plugin: AddToAny — botones de compartir (réplica HTML estática)
+   ========================================================================== */
+.addtoany_share_save_container { margin: 1.5em 0; }
+.a2a_kit { display: flex; flex-wrap: wrap; gap: 0.4rem; padding: 0; margin: 0; list-style: none; }
+.a2a_kit li:before { content: ""; }
+.a2a_kit li { margin: 0; }
+.a2a_button {
+	display: inline-flex; align-items: center; justify-content: center;
+	width: 3.2rem; height: 3.2rem; border-radius: 0.3rem;
+	color: #fff; font-size: 1.6rem; line-height: 1; text-decoration: none;
+	transition: opacity 0.15s ease;
+}
+.a2a_button:hover { color: #fff; opacity: 0.82; text-decoration: none; }
+.a2a_button .fa { color: #fff; }
+.a2a_button_facebook { background: #3b5998; }
+.a2a_button_twitter  { background: #1da1f2; }
+.a2a_button_whatsapp { background: #25d366; }
+.a2a_button_telegram { background: #0088cc; }
+.a2a_button_email    { background: #7d7d7d; }
+.a2a_label { font-size: 1.2rem; color: #888; margin: 0 0 0.4rem; font-weight: bold;
+	text-transform: uppercase; letter-spacing: 0.05em; }
+
+/* ==========================================================================
+   Plugin: YARPP (Yet Another Related Posts Plugin) — entradas relacionadas
+   ========================================================================== */
+.yarpp-related { margin: 2em 0 0; padding: 1.5em 0 0; border-top: 3px double #e4e4e4; }
+.yarpp-related > h3 { margin: 0 0 1em; font-size: 1.8rem; }
+.yarpp-related-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.2rem;
+	list-style: none; margin: 0; padding: 0; }
+.yarpp-related-list li:before { content: ""; }
+.yarpp-related-list li { margin: 0; }
+.yarpp-thumb { display: block; }
+.yarpp-thumb img { width: 100%; height: 120px; object-fit: cover; display: block;
+	border-radius: 0.4rem; box-shadow: rgba(0,0,0,0.2) 0 0 0.3rem 0.1rem; background: #e4e4e4; }
+.yarpp-thumb-placeholder { width: 100%; height: 120px; border-radius: 0.4rem;
+	background: #6d97b7 url("/assets/themes/f2/images/noise.png"); display: flex;
+	align-items: center; justify-content: center; }
+.yarpp-thumb-placeholder .fa { font-size: 3rem; color: rgba(255,255,255,0.55); }
+.yarpp-related-list .yarpp-title { display: block; margin: 0.5rem 0 0.2rem; font-weight: bold;
+	line-height: 1.25; }
+.yarpp-related-list .yarpp-date { font-size: 1.2rem; color: #888; }
+@media screen and (max-width: 30em) {
+	.yarpp-related-list { grid-template-columns: 1fr; }
+}

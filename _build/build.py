@@ -53,10 +53,15 @@ SOCIAL_LINKS = [
     ("https://www.youtube.com/user/lennynero1976", "YouTube"),
 ]
 
-# Fuentes del tema F2
+# Fuentes del tema F2 (las mismas que cargaba el blog en 2019: Bitter:700 + Gudea)
 FONTS_LINK = ('<link rel="preconnect" href="https://fonts.googleapis.com"/>'
-              '<link href="https://fonts.googleapis.com/css?family=Bitter:400,700|'
+              '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>'
+              '<link href="https://fonts.googleapis.com/css?family=Bitter:700|'
               'Gudea:400,700,400italic&amp;display=swap" rel="stylesheet"/>')
+
+# Font Awesome 4.5.0 desde CDN (iconos de los botones de compartir, como en 2019)
+FONTAWESOME_LINK = ('<link rel="stylesheet" '
+                    'href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css"/>')
 
 WB_PREFIX = re.compile(r'^(?:https?:)?//web\.archive\.org/web/\d+[a-z_]*?/(.*)$', re.I)
 
@@ -421,7 +426,10 @@ def page_shell(title, body, description="", canonical="", active="",
 <meta name="theme-color" content="#6d97b7"/>
 <link rel="preconnect" href="https://web.archive.org"/>
 {FONTS_LINK}
-<link rel="stylesheet" href="/assets/css/style.css"/>
+{FONTAWESOME_LINK}
+<link rel="stylesheet" href="/assets/css/f2-original.css"/>
+<link rel="stylesheet" href="/assets/css/f2-adaptacion.css"/>
+<link rel="stylesheet" media="print" href="/assets/css/f2-print.css"/>
 <link rel="alternate" type="application/json" href="/posts.json"/>
 {extra_head}
 </head>
@@ -521,6 +529,103 @@ def entry_summary(p):
 </article>"""
 
 
+def share_buttons(p):
+    """Botones de compartir, réplica HTML estática del plugin AddToAny (2019)."""
+    import urllib.parse as up
+    url = f"{SITE_URL}/{p['slug']}/"
+    title = p["title"]
+    u = up.quote(url, safe="")
+    t = up.quote(title, safe="")
+    tu = up.quote(f"{title} {url}", safe="")
+    services = [
+        ("facebook", "fa-facebook", "Compartir en Facebook",
+         f"https://www.facebook.com/sharer/sharer.php?u={u}"),
+        ("twitter", "fa-twitter", "Compartir en Twitter",
+         f"https://twitter.com/intent/tweet?url={u}&text={t}"),
+        ("whatsapp", "fa-whatsapp", "Compartir en WhatsApp",
+         f"https://api.whatsapp.com/send?text={tu}"),
+        ("telegram", "fa-paper-plane", "Compartir en Telegram",
+         f"https://t.me/share/url?url={u}&text={t}"),
+        ("email", "fa-envelope", "Compartir por correo",
+         f"mailto:?subject={t}&body={tu}"),
+    ]
+    items = "\n        ".join(
+        f'<li><a class="a2a_button a2a_button_{svc}" href="{esc(href)}" '
+        f'target="_blank" rel="noopener nofollow" title="{esc(label)}" '
+        f'aria-label="{esc(label)}"><i class="fa {icon}" aria-hidden="true"></i>'
+        f'<span class="screen-reader-text">{esc(label)}</span></a></li>'
+        for svc, icon, label, href in services)
+    return f"""<div class="addtoany_share_save_container">
+      <p class="a2a_label">Compartir</p>
+      <ul class="a2a_kit a2a_kit_size_32 a2a_default_style">
+        {items}
+      </ul>
+    </div><!-- .addtoany_share_save_container -->"""
+
+
+def compute_related(posts, limit=4):
+    """Asigna a cada post sus entradas relacionadas (estilo YARPP).
+
+    Puntuación: etiquetas compartidas (×3) + categorías compartidas (×2);
+    se desempata por proximidad de fecha. Si no hay coincidencias suficientes,
+    se completa con las entradas más cercanas en el tiempo de la misma categoría.
+    """
+    for p in posts:
+        ptags, pcats = set(p["tags"]), set(p["cats"])
+        scored = []
+        for q in posts:
+            if q is p:
+                continue
+            score = 3 * len(ptags & set(q["tags"])) + 2 * len(pcats & set(q["cats"]))
+            if score > 0:
+                gap = abs((p["dt"] - q["dt"]).days)
+                scored.append((-score, gap, q))
+        scored.sort(key=lambda x: (x[0], x[1]))
+        related = [q for _, _, q in scored[:limit]]
+        # Completar con vecinos por fecha si faltan
+        if len(related) < limit:
+            chosen = set(id(x) for x in related) | {id(p)}
+            rest = sorted((q for q in posts if id(q) not in chosen),
+                          key=lambda q: abs((p["dt"] - q["dt"]).days))
+            related += rest[:limit - len(related)]
+        p["related"] = related
+
+
+def related_thumb(q):
+    """Miniatura de una entrada relacionada (o placeholder con icono)."""
+    if q.get("thumb"):
+        rel = upload_rel(q["thumb"])
+        if rel:
+            local = "/assets/uploads/" + rel
+            fb = q["thumb"].replace("'", "%27")
+            return (f'<img loading="lazy" alt="{esc(q["title"])}" src="{esc(local)}" '
+                    f'onerror="this.onerror=null;this.src=\'{esc(fb)}\'"/>')
+        return (f'<img loading="lazy" alt="{esc(q["title"])}" '
+                f'src="{esc(strip_wayback(q["thumb"]))}"/>')
+    return ('<span class="yarpp-thumb-placeholder">'
+            '<i class="fa fa-music" aria-hidden="true"></i></span>')
+
+
+def related_html(p):
+    """Bloque de entradas relacionadas, réplica del plugin YARPP (2019)."""
+    rel = p.get("related") or []
+    if not rel:
+        return ""
+    items = "\n      ".join(
+        f'<li>'
+        f'<a class="yarpp-thumb" href="/{q["slug"]}/">{related_thumb(q)}</a>'
+        f'<a class="yarpp-title" href="/{q["slug"]}/">{esc(q["title"])}</a>'
+        f'<span class="yarpp-date">{esc(q["date_pretty"])}</span>'
+        f'</li>'
+        for q in rel)
+    return f"""<div class="yarpp-related">
+    <h3>Entradas relacionadas</h3>
+    <ul class="yarpp-related-list">
+      {items}
+    </ul>
+  </div><!-- .yarpp-related -->"""
+
+
 def render_post(p, prev=None, nxt=None):
     cat = f'<span class="cat-links">Publicado en&nbsp;{cat_links(p["cats"])}</span>'
     tags = ""
@@ -548,8 +653,11 @@ def render_post(p, prev=None, nxt=None):
   <footer class="entry-meta">
     {cat}
     {tags}
+    {share_buttons(p)}
   </footer><!-- .entry-meta -->
 </article>
+
+{related_html(p)}
 
 <nav class="site-navigation post-navigation" role="navigation">
   {nav_prev}
@@ -651,6 +759,9 @@ def main():
     ACTIVE_CATS = [c for c in CAT_ORDER if any(c in p["cats"] for p in posts)]
     TOTAL_POSTS = len(posts)
     ARCHIVE_YEARS = sorted({p["year"] for p in posts}, reverse=True)
+
+    # Entradas relacionadas (plugin YARPP) para cada post
+    compute_related(posts)
 
     # Posts individuales (con navegación anterior/siguiente)
     # posts está ordenado de más reciente a más antiguo
