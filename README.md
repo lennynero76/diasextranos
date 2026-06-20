@@ -7,17 +7,24 @@ El contenido (142 entradas, 2007–2018) se recuperó del archivo del blog y de 
 Wayback Machine, y se reconstruyó como un sitio estático ligero en **HTML/CSS/JS
 vanilla**, sin frameworks ni dependencias de build.
 
+El diseño replica el tema **F2** de WordPress que usaba el blog original: misma
+estructura DOM (`#page` › `#masthead` › `#main` › `#primary`/`#content` +
+`#secondary`/`#sidebar-1` › `#colophon`), mismos selectores (`.hentry`,
+`.entry-content`, `.entry-meta`, `.widget`, …) y el `style.css` del propio tema F2
+como base, con un esquema de color azul, tipografías *Bitter* (títulos) y *Gudea*
+(cuerpo) y maquetación de dos columnas (contenido + sidebar derecho de widgets).
+
 ## Estructura
 
 ```
-/                       index.html        → portada con buscador y filtros
-/<slug>/                index.html        → cada entrada
-/categoria/<slug>/      index.html        → listado por categoría
+/                       index.html        → portada: listado de entradas (.hentry)
+/<slug>/                index.html        → cada entrada (artículo + comentarios meta)
+/categoria/<slug>/      index.html        → archivo por categoría
 /archivo/               index.html        → todas las entradas por año
 /404.html                                 → página de error
 /posts.json                               → índice de entradas (búsqueda / feeds)
-/assets/css/style.css                     → estilos (tema claro/oscuro automático)
-/assets/js/main.js                        → menú móvil + buscador en cliente
+/assets/css/style.css                     → tema F2 (base) + adaptaciones del sitio
+/assets/js/main.js                        → menú responsive + buscador en cliente
 /assets/uploads/                          → imágenes de los posts
 /_build/                                  → scripts de generación (no se sirven)
 ```

@@ -1,63 +1,50 @@
-// Días Extraños — interacción ligera (sin dependencias)
+// Días Extraños — interacción ligera (sin dependencias), tema F2
 (function () {
   "use strict";
 
-  // --- Menú móvil ---
-  var toggle = document.querySelector(".nav-toggle");
-  var nav = document.querySelector(".site-nav");
-  if (toggle && nav) {
+  // --- Menú principal responsive (botón .menu-toggle del tema F2) ---
+  var nav = document.getElementById("site-navigation");
+  var toggle = nav && nav.querySelector(".menu-toggle");
+  if (nav && toggle) {
     toggle.addEventListener("click", function () {
-      var open = nav.classList.toggle("open");
+      var open = nav.classList.toggle("toggled");
       toggle.setAttribute("aria-expanded", open ? "true" : "false");
     });
     nav.addEventListener("click", function (e) {
-      if (e.target.tagName === "A") nav.classList.remove("open");
+      if (e.target.tagName === "A") nav.classList.remove("toggled");
     });
   }
 
-  // --- Búsqueda y filtro en la home ---
+  // --- Búsqueda en cliente sobre los listados de entradas ---
   var search = document.getElementById("search");
-  var cardsWrap = document.getElementById("cards");
-  if (!cardsWrap) return;
+  var entriesWrap = document.getElementById("entries");
+  if (!search || !entriesWrap) return;
 
-  var cards = Array.prototype.slice.call(cardsWrap.querySelectorAll(".card"));
-  var filters = Array.prototype.slice.call(document.querySelectorAll(".filter"));
+  var entries = Array.prototype.slice.call(
+    entriesWrap.querySelectorAll(".hentry[data-search]"));
   var noResults = document.getElementById("no-results");
   var count = document.getElementById("result-count");
-  var total = cards.length;
-  var activeCat = "";
-  var query = "";
+  var total = entries.length;
 
   function norm(s) {
     return (s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   }
 
   function apply() {
-    var q = norm(query.trim());
+    var q = norm(search.value.trim());
     var visible = 0;
-    cards.forEach(function (card) {
-      var hayCat = !activeCat || (" " + card.getAttribute("data-cats") + " ").indexOf(" " + activeCat + " ") !== -1;
-      var hayText = !q || norm(card.getAttribute("data-search")).indexOf(q) !== -1;
-      var show = hayCat && hayText;
-      card.hidden = !show;
+    entries.forEach(function (el) {
+      var show = !q || norm(el.getAttribute("data-search")).indexOf(q) !== -1;
+      el.hidden = !show;
       if (show) visible++;
     });
     if (noResults) noResults.hidden = visible !== 0;
     if (count) {
-      if (!q && !activeCat) count.textContent = "";
-      else count.textContent = visible + (visible === 1 ? " entrada" : " entradas") + " de " + total;
+      count.textContent = q
+        ? visible + (visible === 1 ? " entrada" : " entradas") + " de " + total
+        : "";
     }
   }
 
-  if (search) {
-    search.addEventListener("input", function () { query = search.value; apply(); });
-  }
-  filters.forEach(function (btn) {
-    btn.addEventListener("click", function () {
-      filters.forEach(function (b) { b.classList.remove("active"); });
-      btn.classList.add("active");
-      activeCat = btn.getAttribute("data-cat") || "";
-      apply();
-    });
-  });
+  search.addEventListener("input", apply);
 })();

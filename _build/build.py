@@ -42,6 +42,21 @@ CAT_ORDER = ["musica","favoritos","cine","literatura","historia",
 
 # Categorías con contenido (se rellena en main); por defecto todas
 ACTIVE_CATS = list(CAT_ORDER)
+# Se rellenan en main() para los widgets del sidebar
+TOTAL_POSTS = 0
+ARCHIVE_YEARS = []
+
+# Enlaces sociales (widget "Encuéntrame", como en el original)
+SOCIAL_LINKS = [
+    ("https://twitter.com/lennynero1976", "Twitter"),
+    ("https://www.instagram.com/lennynero_jpv/", "Instagram"),
+    ("https://www.youtube.com/user/lennynero1976", "YouTube"),
+]
+
+# Fuentes del tema F2
+FONTS_LINK = ('<link rel="preconnect" href="https://fonts.googleapis.com"/>'
+              '<link href="https://fonts.googleapis.com/css?family=Bitter:400,700|'
+              'Gudea:400,700,400italic&amp;display=swap" rel="stylesheet"/>')
 
 WB_PREFIX = re.compile(r'^(?:https?:)?//web\.archive\.org/web/\d+[a-z_]*?/(.*)$', re.I)
 
@@ -326,21 +341,69 @@ def esc(s):
     return htmllib.escape(s or "", quote=True)
 
 
-def nav_html(active=""):
-    links = []
+def menu_html(active=""):
+    """Menú horizontal principal del tema F2 (Inicio + categorías + Archivo)."""
+    items = ['<li class="menu-item"><a href="/">Inicio</a></li>']
     for slug in ACTIVE_CATS:
-        cls = ' class="active"' if active == slug else ''
-        links.append(f'<a href="/categoria/{slug}/"{cls}>{esc(CAT_NAMES[slug])}</a>')
-    return "\n        ".join(links)
+        cls = ' class="menu-item current-menu-item"' if active == slug else ' class="menu-item"'
+        items.append(f'<li{cls}><a href="/categoria/{slug}/">{esc(CAT_NAMES[slug])}</a></li>')
+    ac = ' current-menu-item' if active == "archivo" else ''
+    items.append(f'<li class="menu-item{ac}"><a href="/archivo/">Archivo</a></li>')
+    return "\n          ".join(items)
+
+
+def sidebar_html(active=""):
+    """Área de widgets del sidebar derecho, replicando los del original."""
+    # Widget: Buscar
+    search = f"""<aside id="search-1" class="widget widget_search">
+        <h2 class="widget-title">Buscar</h2>
+        <form role="search" class="search-form" onsubmit="return false;">
+          <label><span class="screen-reader-text">Buscar:</span>
+          <input type="search" id="search" class="search-field" placeholder="Buscar entre {TOTAL_POSTS} entradas…" aria-label="Buscar"/></label>
+        </form>
+        <p class="search-feedback" id="result-count"></p>
+      </aside>"""
+    # Widget: Secciones (categorías)
+    cat_items = "\n        ".join(
+        f'<li class="cat-item{" current-cat" if active==c else ""}">'
+        f'<a href="/categoria/{c}/">{esc(CAT_NAMES[c])}</a></li>'
+        for c in ACTIVE_CATS)
+    cats = f"""<aside id="categories-3" class="widget widget_categories">
+        <h2 class="widget-title">Secciones</h2>
+        <ul>
+        {cat_items}
+        </ul>
+      </aside>"""
+    # Widget: Archivo (por años)
+    year_items = "\n        ".join(
+        f'<li><a href="/archivo/#{y}">{y}</a></li>' for y in ARCHIVE_YEARS)
+    arch = f"""<aside id="archives-3" class="widget widget_archive">
+        <h2 class="widget-title">Archivo</h2>
+        <ul>
+        <li><a href="/archivo/">Todas las entradas</a></li>
+        {year_items}
+        </ul>
+      </aside>"""
+    # Widget: Encuéntrame (enlaces sociales)
+    soc_items = "\n        ".join(
+        f'<li><a href="{esc(url)}" target="_blank" rel="me noopener">{esc(name)}</a></li>'
+        for url, name in SOCIAL_LINKS)
+    social = f"""<aside id="social-1" class="widget widget_links">
+        <h2 class="widget-title">Encuéntrame</h2>
+        <ul class="xoxo blogroll">
+        {soc_items}
+        </ul>
+      </aside>"""
+    return "\n      ".join([search, cats, arch, social])
 
 
 def page_shell(title, body, description="", canonical="", active="",
-               og_image="", extra_head="", body_class=""):
+               og_image="", extra_head="", body_class="one-sidebar-right medium-sidebar"):
     desc = esc(description or SITE_DESC)
     canon = canonical or SITE_URL
     ogimg = og_image or ""
     og_tag = f'<meta property="og:image" content="{esc(ogimg)}"/>' if ogimg else ""
-    bc = f' class="{body_class}"' if body_class else ""
+    bc = f' class="{esc(body_class)}"' if body_class else ""
     return f"""<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -355,145 +418,181 @@ def page_shell(title, body, description="", canonical="", active="",
 <meta property="og:url" content="{esc(canon)}"/>
 <meta property="og:type" content="website"/>
 {og_tag}
-<meta name="theme-color" content="#111418"/>
+<meta name="theme-color" content="#6d97b7"/>
 <link rel="preconnect" href="https://web.archive.org"/>
+{FONTS_LINK}
 <link rel="stylesheet" href="/assets/css/style.css"/>
 <link rel="alternate" type="application/json" href="/posts.json"/>
 {extra_head}
 </head>
 <body{bc}>
-<a class="skip" href="#main">Saltar al contenido</a>
-<header class="site-header">
-  <div class="wrap header-inner">
-    <div class="brand">
-      <a href="/" class="brand-link">
-        <span class="brand-title">{esc(SITE_NAME)}</span>
-        <span class="brand-sub">{esc(SITE_DESC)}</span>
-      </a>
-    </div>
-    <button class="nav-toggle" aria-label="Abrir menú" aria-expanded="false">
-      <span></span><span></span><span></span>
-    </button>
-    <nav class="site-nav" aria-label="Secciones">
-        {nav_html(active)}
-    </nav>
-  </div>
-</header>
-<main id="main" class="wrap">
+<div id="page" class="hfeed site">
+  <a class="skip-link screen-reader-text" href="#content">Saltar al contenido</a>
+
+  <header id="masthead" class="site-header" role="banner">
+    <div class="site-branding">
+      <h1 class="site-title"><a href="/" title="{esc(SITE_NAME)}" rel="home">{esc(SITE_NAME)}</a></h1>
+      <h2 class="site-description">{esc(SITE_DESC)}</h2>
+    </div><!-- .site-branding -->
+
+    <nav id="site-navigation" class="site-navigation main-navigation" role="navigation">
+      <button class="menu-toggle" aria-controls="primary-menu" aria-expanded="false">Menú</button>
+      <div class="menu">
+        <ul>
+          {menu_html(active)}
+        </ul>
+      </div>
+    </nav><!-- #site-navigation -->
+  </header><!-- #masthead .site-header -->
+
+  <div id="main" class="site-main">
+    <div id="primary" class="content-area">
+      <div id="content" class="site-content" role="main">
 {body}
-</main>
-<footer class="site-footer">
-  <div class="wrap">
-    <p class="foot-brand">{esc(SITE_NAME)} · <span>{esc(SITE_DESC)}</span></p>
-    <p class="foot-social">
-      <a href="https://twitter.com/lennynero1976" target="_blank" rel="noopener">Twitter</a>
-      <a href="https://www.instagram.com/lennynero_jpv/" target="_blank" rel="noopener">Instagram</a>
-      <a href="https://www.youtube.com/user/lennynero1976" target="_blank" rel="noopener">YouTube</a>
-    </p>
-    <p class="foot-note">Archivo recuperado del blog original (2007–2018). Reconstruido como sitio estático.</p>
-  </div>
-</footer>
+      </div><!-- #content .site-content -->
+    </div><!-- #primary .content-area -->
+
+    <div id="secondary" class="widget-area" role="complementary">
+      <div id="sidebar-1" class="sidebar">
+      {sidebar_html(active)}
+      </div><!-- #sidebar-1 .sidebar -->
+    </div><!-- #secondary .widget-area -->
+  </div><!-- #main .site-main -->
+
+  <footer id="colophon" class="site-footer" role="contentinfo">
+    <div class="site-info">
+      <div>&copy; {SITE_NAME} · {esc(SITE_DESC)}</div>
+    </div>
+    <div class="f2-credits">
+      Archivo recuperado del blog original (2007–2018), reconstruido como sitio estático.
+    </div><!-- .f2-credits -->
+  </footer><!-- #colophon .site-footer -->
+</div><!-- #page .site -->
 <script src="/assets/js/main.js" defer></script>
 </body>
 </html>
 """
 
 
-def cat_chip(slug):
-    return f'<a class="chip" href="/categoria/{slug}/">{esc(CAT_NAMES.get(slug, slug))}</a>'
+def cat_links(cats):
+    return ", ".join(
+        f'<a href="/categoria/{c}/" rel="category tag">{esc(CAT_NAMES.get(c, c))}</a>'
+        for c in cats)
 
 
-def post_card(p):
-    cats = " ".join(cat_chip(c) for c in p["cats"])
-    thumb = ""
-    if p["thumb"]:
-        rel = upload_rel(p["thumb"])
-        if rel:
-            local = "/assets/uploads/" + rel
-            fb = p["thumb"].replace("'", "%27")
-            thumb = (f'<a class="card-media" href="/{p["slug"]}/">'
-                     f'<img loading="lazy" alt="" src="{esc(local)}" '
-                     f'onerror="this.onerror=null;this.src=\'{esc(fb)}\'"/></a>')
-        else:
-            thumb = (f'<a class="card-media" href="/{p["slug"]}/">'
-                     f'<img loading="lazy" alt="" src="{esc(strip_wayback(p["thumb"]))}"/></a>')
-    data = esc((p["title"] + " " + " ".join(CAT_NAMES.get(c, c) for c in p["cats"]) + " " + " ".join(p["tags"])).lower())
-    return f"""<article class="card" data-search="{data}" data-cats="{esc(' '.join(p['cats']))}">
-  {thumb}
-  <div class="card-body">
-    <div class="card-cats">{cats}</div>
-    <h2 class="card-title"><a href="/{p['slug']}/">{esc(p['title'])}</a></h2>
-    <time class="card-date" datetime="{p['iso']}">{esc(p['date_pretty'])}</time>
-    <p class="card-excerpt">{esc(p['excerpt'])}</p>
-  </div>
+def featured_image(p, link=True):
+    """Imagen destacada (.wp-post-image) con fallback a Wayback."""
+    if not p["thumb"]:
+        return ""
+    rel = upload_rel(p["thumb"])
+    if rel:
+        local = "/assets/uploads/" + rel
+        fb = p["thumb"].replace("'", "%27")
+        img = (f'<img class="wp-post-image" loading="lazy" alt="{esc(p["title"])}" '
+               f'src="{esc(local)}" onerror="this.onerror=null;this.src=\'{esc(fb)}\'"/>')
+    else:
+        img = (f'<img class="wp-post-image" loading="lazy" alt="{esc(p["title"])}" '
+               f'src="{esc(strip_wayback(p["thumb"]))}"/>')
+    if link:
+        return f'<a class="featured-image" href="/{p["slug"]}/" aria-hidden="true" tabindex="-1">{img}</a>'
+    return f'<div class="featured-image">{img}</div>'
+
+
+def entry_summary(p):
+    """Resumen de entrada para los listados (home y categorías), estilo F2."""
+    data = esc((p["title"] + " " + " ".join(CAT_NAMES.get(c, c) for c in p["cats"])
+                + " " + " ".join(p["tags"])).lower())
+    classes = "post hentry format-standard " + " ".join("category-" + c for c in p["cats"])
+    return f"""<article class="{classes}" data-search="{data}" data-cats="{esc(' '.join(p['cats']))}">
+  <header class="entry-header">
+    <h1 class="entry-title"><a href="/{p['slug']}/" rel="bookmark">{esc(p['title'])}</a></h1>
+    <div class="entry-meta">
+      Publicado por <span class="author vcard">{esc(AUTHOR)}</span> el
+      <time class="entry-date" datetime="{p['iso']}">{esc(p['date_pretty'])}</time>
+      <span class="sep"> · </span>
+      <span class="cat-links">{cat_links(p['cats'])}</span>
+    </div><!-- .entry-meta -->
+  </header><!-- .entry-header -->
+  {featured_image(p)}
+  <div class="entry-summary">
+    <p>{esc(p['excerpt'])}</p>
+    <p><a class="more-link" href="/{p['slug']}/">Leer más &rarr;</a></p>
+  </div><!-- .entry-summary -->
 </article>"""
 
 
-def render_post(p, valid):
-    cats = " ".join(cat_chip(c) for c in p["cats"])
+def render_post(p, prev=None, nxt=None):
+    cat = f'<span class="cat-links">Publicado en&nbsp;{cat_links(p["cats"])}</span>'
     tags = ""
     if p["tags"]:
-        tags = ('<div class="post-tags"><span>Etiquetas:</span> '
-                + ", ".join(esc(t) for t in p["tags"]) + "</div>")
+        tags = ('<span class="sep"> | </span><span class="tag-links">Etiquetado&nbsp;'
+                + ", ".join(esc(t) for t in p["tags"]) + "</span>")
+    nav_prev = (f'<div class="nav-previous"><a href="/{prev["slug"]}/" rel="prev">'
+                f'&laquo; {esc(prev["title"])}</a></div>') if prev else ''
+    nav_next = (f'<div class="nav-next"><a href="/{nxt["slug"]}/" rel="next">'
+                f'{esc(nxt["title"])} &raquo;</a></div>') if nxt else ''
     canon = f"{SITE_URL}/{p['slug']}/"
-    body = f"""<article class="post">
-  <header class="post-header">
-    <div class="post-cats">{cats}</div>
-    <h1 class="post-title">{esc(p['title'])}</h1>
-    <div class="post-meta">
-      <span class="post-author">{esc(AUTHOR)}</span>
-      <span class="sep">·</span>
-      <time datetime="{p['iso']}">{esc(p['date_pretty'])}</time>
-    </div>
-  </header>
-  <div class="post-content">
+    body = f"""<article id="post-{p['slug']}" class="post hentry format-standard">
+  <header class="entry-header">
+    <h1 class="entry-title">{esc(p['title'])}</h1>
+    <div class="entry-meta">
+      Publicado por <span class="author vcard">{esc(AUTHOR)}</span> el
+      <time class="entry-date" datetime="{p['iso']}">{esc(p['date_pretty'])}</time>
+    </div><!-- .entry-meta -->
+  </header><!-- .entry-header -->
+
+  <div class="entry-content">
 {p['content']}
-  </div>
-  {tags}
-  <nav class="post-foot-nav"><a href="/" class="back">← Volver al inicio</a></nav>
-</article>"""
+  </div><!-- .entry-content -->
+
+  <footer class="entry-meta">
+    {cat}
+    {tags}
+  </footer><!-- .entry-meta -->
+</article>
+
+<nav class="site-navigation post-navigation" role="navigation">
+  {nav_prev}
+  {nav_next}
+</nav>"""
     return page_shell(f"{p['title']} · {SITE_NAME}", body,
                       description=p["desc"], canonical=canon,
                       active=p["cats"][0] if p["cats"] else "",
-                      og_image=p["thumb"] or "")
+                      og_image=p["thumb"] or "",
+                      body_class="single single-post one-sidebar-right medium-sidebar")
 
 
 def render_home(posts):
-    chips = '<button class="filter active" data-cat="">Todo</button>' + "".join(
-        f'<button class="filter" data-cat="{c}">{esc(CAT_NAMES[c])}</button>' for c in ACTIVE_CATS)
-    cards = "\n".join(post_card(p) for p in posts)
-    body = f"""<section class="hero">
-  <h1 class="hero-title">{esc(SITE_NAME)}</h1>
-  <p class="hero-sub">{esc(SITE_DESC)} — música, conciertos, cine y cultura.</p>
-  <div class="search-wrap">
-    <input type="search" id="search" placeholder="Buscar entre {len(posts)} entradas…" aria-label="Buscar"/>
-  </div>
-  <div class="filters">{chips}</div>
-</section>
-<p class="result-count" id="result-count"></p>
-<section class="cards" id="cards">
-{cards}
-</section>
+    entries = "\n".join(entry_summary(p) for p in posts)
+    body = f"""<header class="page-header">
+  <h1 class="page-title">Entradas recientes</h1>
+  <span>{len(posts)} entradas · usa el buscador del lateral para filtrar</span>
+</header>
+<div id="entries">
+{entries}
+</div>
 <p class="no-results" id="no-results" hidden>No se encontraron entradas.</p>"""
     return page_shell(f"{SITE_NAME} · {SITE_DESC}", body,
                       description=f"{SITE_DESC}. Archivo del blog de música, conciertos y cultura diasextranos.com.",
-                      canonical=SITE_URL)
+                      canonical=SITE_URL,
+                      body_class="home blog one-sidebar-right medium-sidebar")
 
 
 def render_category(slug, posts):
-    cards = "\n".join(post_card(p) for p in posts)
+    entries = "\n".join(entry_summary(p) for p in posts)
     name = CAT_NAMES[slug]
-    body = f"""<section class="page-head">
-  <p class="crumb"><a href="/">Inicio</a> / Categoría</p>
-  <h1 class="page-title">{esc(name)}</h1>
-  <p class="page-sub">{len(posts)} {'entrada' if len(posts)==1 else 'entradas'}</p>
-</section>
-<section class="cards">
-{cards}
-</section>"""
+    body = f"""<header class="page-header">
+  <h1 class="page-title">Archivo de la categoría: <span>{esc(name)}</span></h1>
+  <span>{len(posts)} {'entrada' if len(posts)==1 else 'entradas'}</span>
+</header>
+<div id="entries">
+{entries}
+</div>
+<p class="no-results" id="no-results" hidden>No se encontraron entradas.</p>"""
     return page_shell(f"{name} · {SITE_NAME}", body,
                       description=f"Entradas de la categoría {name} en {SITE_NAME}.",
-                      canonical=f"{SITE_URL}/categoria/{slug}/", active=slug)
+                      canonical=f"{SITE_URL}/categoria/{slug}/", active=slug,
+                      body_class="archive category one-sidebar-right medium-sidebar")
 
 
 def render_archive(posts):
@@ -503,28 +602,32 @@ def render_archive(posts):
     blocks = []
     for year in sorted(by_year, reverse=True):
         items = "\n".join(
-            f'<li><time datetime="{p["iso"]}">{p["dt"].day:02d}/{p["dt"].month:02d}</time>'
+            f'<li><time datetime="{p["iso"]}">{p["dt"].day:02d}/{p["dt"].month:02d}</time> '
             f'<a href="/{p["slug"]}/">{esc(p["title"])}</a></li>'
             for p in by_year[year])
-        blocks.append(f'<section class="year-block"><h2 class="year">{year}</h2><ul class="arch-list">{items}</ul></section>')
-    body = f"""<section class="page-head">
-  <p class="crumb"><a href="/">Inicio</a> / Archivo</p>
+        blocks.append(f'<section class="year-block" id="{year}">'
+                      f'<h2 class="year">{year}</h2>'
+                      f'<ul class="arch-list">{items}</ul></section>')
+    body = f"""<header class="page-header">
   <h1 class="page-title">Archivo</h1>
-  <p class="page-sub">{len(posts)} entradas desde {min(p['year'] for p in posts)} a {max(p['year'] for p in posts)}</p>
-</section>
+  <span>{len(posts)} entradas desde {min(p['year'] for p in posts)} a {max(p['year'] for p in posts)}</span>
+</header>
 {''.join(blocks)}"""
     return page_shell(f"Archivo · {SITE_NAME}", body,
                       description="Todas las entradas de Días Extraños ordenadas por año.",
-                      canonical=f"{SITE_URL}/archivo/")
+                      canonical=f"{SITE_URL}/archivo/", active="archivo",
+                      body_class="archive one-sidebar-right medium-sidebar")
 
 
 def render_404():
-    body = """<section class="page-head center">
-  <h1 class="page-title big">404</h1>
-  <p class="page-sub">No encontramos esta página.</p>
-  <p><a class="btn" href="/">Volver al inicio</a></p>
-</section>"""
-    return page_shell(f"404 · {SITE_NAME}", body, canonical=f"{SITE_URL}/404")
+    body = """<header class="page-header">
+  <h1 class="page-title">404 — No encontrado</h1>
+  <span>No encontramos esta página.</span>
+</header>
+<p>La página que buscas no existe o se ha movido. <a href="/">Volver al inicio</a>.</p>
+<p><a class="btn" href="/">Volver al inicio</a></p>"""
+    return page_shell(f"404 · {SITE_NAME}", body, canonical=f"{SITE_URL}/404",
+                      body_class="error404 one-sidebar-right medium-sidebar")
 
 
 # ---------------------------------------------------------------------------
@@ -544,12 +647,17 @@ def main():
     posts = [parse_post(f, valid_slugs) for f in files]
     posts.sort(key=lambda p: p["dt"], reverse=True)
 
-    global ACTIVE_CATS
+    global ACTIVE_CATS, TOTAL_POSTS, ARCHIVE_YEARS
     ACTIVE_CATS = [c for c in CAT_ORDER if any(c in p["cats"] for p in posts)]
+    TOTAL_POSTS = len(posts)
+    ARCHIVE_YEARS = sorted({p["year"] for p in posts}, reverse=True)
 
-    # Posts individuales
-    for p in posts:
-        write_page(f"{p['slug']}/index.html", render_post(p, valid_slugs))
+    # Posts individuales (con navegación anterior/siguiente)
+    # posts está ordenado de más reciente a más antiguo
+    for i, p in enumerate(posts):
+        nxt = posts[i - 1] if i > 0 else None              # entrada más reciente
+        prev = posts[i + 1] if i + 1 < len(posts) else None  # entrada más antigua
+        write_page(f"{p['slug']}/index.html", render_post(p, prev=prev, nxt=nxt))
 
     # Home
     write_page("index.html", render_home(posts))
